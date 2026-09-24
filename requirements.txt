@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+selectolax
+pydantic
+fake-useragent
+curl_cffi
+cachetools
