@@ -13,7 +13,7 @@
 
 **Amazon Scraper API** is an asynchronous microservice engineered to extract clean, structured product data from multiple Amazon marketplaces in under a second. Built on top of **FastAPI**, **curl_cffi**, and **Selectolax**, it bypasses standard WAF/Anti-Bot protections by mimicking real browser TLS fingerprints and HTTP/2 requests.
 
-Designed for seamless deployment on **Render** and instant listing on **RapidAPI Marketplace**.
+
 
 ---
 
