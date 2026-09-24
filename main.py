@@ -4,6 +4,7 @@ import random
 import logging
 import uuid
 import os
+import json
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, Query, Request, Header, status
 from fastapi.responses import JSONResponse
@@ -21,7 +22,7 @@ logger = logging.getLogger("rapidapi_amazon_scraper")
 app = FastAPI(
     title="Enterprise Amazon Scraper API (RapidAPI Ready)",
     description="High-speed, anti-bot resilient Amazon product intelligence API.",
-    version="2.0.1"
+    version="2.1.0"
 )
 
 # In-memory TTL cache (Holds max 1000 items for 15 minutes)
@@ -32,7 +33,7 @@ ua = UserAgent(browsers=['chrome', 'edge'])
 
 
 # ------------------------------------------------------------------------------
-# 1. PYDANTIC SCHEMAS
+# 1. ENHANCED PYDANTIC SCHEMAS
 # ------------------------------------------------------------------------------
 
 class ValidationErrorDetail(BaseModel):
@@ -70,7 +71,8 @@ class ProductData(BaseModel):
     ratings_count: Optional[int] = Field(None, description="Total review count")
     availability: Optional[str] = Field(None, description="Stock status")
     seller_info: Optional[str] = Field(None, description="Sold by and shipped by info")
-    image_url: Optional[str] = Field(None, description="Main high-res product image")
+    image_url: Optional[str] = Field(None, description="Primary high-res product image")
+    images: List[str] = Field(default=[], description="Full gallery of high-res product images")
     category_path: List[str] = Field(default=[], description="Breadcrumb category hierarchy")
     specifications: Dict[str, str] = Field(default={}, description="Key-value technical details")
     bullet_points: List[str] = Field(default=[], description="Feature highlights")
@@ -168,7 +170,7 @@ async def global_catch_all_handler(request: Request, exc: Exception):
 
 
 # ------------------------------------------------------------------------------
-# 4. CLEAN & REFINED PARSER
+# 4. CLEAN & REFINED PARSER (WITH MULTI-IMAGE GALLERY)
 # ------------------------------------------------------------------------------
 
 def clean_text(text: Optional[str]) -> Optional[str]:
@@ -232,7 +234,7 @@ def parse_amazon_html(html: str, asin: str, url: str) -> ProductData:
             except ValueError:
                 numeric_price = None
 
-    # Rating (Cleaned leading zeroes)
+    # Rating
     rating = None
     rating_node = (
         tree.css_first("i.a-icon-star span.a-icon-alt") 
@@ -260,7 +262,7 @@ def parse_amazon_html(html: str, asin: str, url: str) -> ProductData:
             except ValueError:
                 ratings_count = None
 
-    # Availability (Added punctuation spacing fix)
+    # Availability
     avail_node = tree.css_first("#availability")
     availability = clean_text(avail_node.text()) if avail_node else "Unknown"
     if availability:
@@ -270,11 +272,41 @@ def parse_amazon_html(html: str, asin: str, url: str) -> ProductData:
     merchant_node = tree.css_first("#merchant-info") or tree.css_first("#sellerProfileTriggerId")
     seller_info = clean_text(merchant_node.text()) if merchant_node else None
 
-    # Image
+    # --------------------------------------------------------------------------
+    # HIGH-RES MULTI-IMAGE & GALLERY EXTRACTION
+    # --------------------------------------------------------------------------
     image_url = None
-    img_node = tree.css_first("#landingImage") or tree.css_first("#imgBlkFront")
+    images = []
+
+    img_node = tree.css_first("#landingImage") or tree.css_first("#imgBlkFront") or tree.css_first("#main-image")
     if img_node:
+        # Extract primary image
         image_url = img_node.attributes.get("data-old-hires") or img_node.attributes.get("src")
+
+        # Extract dynamic high-res gallery images JSON if available
+        dynamic_imgs_raw = img_node.attributes.get("data-a-dynamic-image")
+        if dynamic_imgs_raw:
+            try:
+                img_dict = json.loads(dynamic_imgs_raw)
+                images = list(img_dict.keys())
+            except Exception:
+                pass
+
+    # Fallback/Additional gallery images from thumbnail list
+    if not images:
+        alt_img_nodes = tree.css("#altImages img, #imageBlock img")
+        for img in alt_img_nodes:
+            src = img.attributes.get("src")
+            if src and "media-amazon.com/images/I/" in src:
+                # Convert thumbnail URL to high-res by stripping sizing modifiers
+                high_res_src = re.sub(r"\._[A-Z0-9_]+_\.", ".", src)
+                if high_res_src not in images and not high_res_src.endswith(".gif"):
+                    images.append(high_res_src)
+
+    if image_url and image_url not in images:
+        images.insert(0, image_url)
+    elif not image_url and images:
+        image_url = images[0]
 
     # Categories
     category_path = []
@@ -285,7 +317,7 @@ def parse_amazon_html(html: str, asin: str, url: str) -> ProductData:
             if text:
                 category_path.append(text)
 
-    # Technical Specs (Filtered out reviews / rank noise)
+    # Technical Specs
     specifications = {}
     spec_tables = tree.css("table.prodDetTable, #productDetails_techSpec_section_1, #detailBullets_feature_div")
     excluded_keys = ["customer reviews", "best sellers rank", "asin"]
@@ -323,6 +355,7 @@ def parse_amazon_html(html: str, asin: str, url: str) -> ProductData:
         availability=availability,
         seller_info=seller_info,
         image_url=image_url,
+        images=images,
         category_path=category_path,
         specifications=specifications,
         bullet_points=bullet_points,
