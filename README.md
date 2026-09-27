@@ -71,3 +71,27 @@
   ],
   "product_url": "[https://www.amazon.com/dp/B005GQW0OW](https://www.amazon.com/dp/B005GQW0OW)"
 }
+
+
+
+---
+
+## 👨‍💻 Developer Information
+
+- **Developer:** Hami_Super_user
+- **Role:** Security Researcher & Python Developer
+
+---
+
+## 💖 Donate & Support
+
+Agar aapko ye project pasand aaya aur aap ise support karna chahte hain:
+
+- ☕ **Buy Me a Coffee:** [buymeacoffee.com/your_username](https://buymeacoffee.com/)
+- 🪙 **Crypto / Wallet:** `0x1234567890abcdef...`
+
+---
+
+## ⚠️ Disclaimer
+
+This tool is created for educational and authorized security assessment purposes only. Unauthorized testing against target websites without prior consent is strictly prohibited
