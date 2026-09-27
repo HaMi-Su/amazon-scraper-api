@@ -13,14 +13,12 @@
 
 **Amazon Scraper API** is an asynchronous microservice engineered to extract clean, structured product data from multiple Amazon marketplaces in under a second. Built on top of **FastAPI**, **curl_cffi**, and **Selectolax**, it bypasses standard WAF/Anti-Bot protections by mimicking real browser TLS fingerprints and HTTP/2 requests.
 
-
-
 ---
 
 ## ✨ Key Features
 
 * 🛡️ **Anti-Bot Shield Bypass:** Utilizes `curl_cffi` for browser-level HTTP/2 and TLS signature impersonation (`chrome120`).
-* ⚡ **Lightning Fast Parsing:** Powered by `Selectolax` (C-based HTML parser) for ultra-low response latencies ($<10\text{ ms}$ cached).
+* ⚡ **Lightning Fast Parsing:** Powered by `Selectolax` (C-based HTML parser) for ultra-low response latencies (<10ms cached).
 * 📦 **Comprehensive Product Intelligence:** Extracts titles, prices, ratings, availability, sellers, high-res images, categories, bullet points, and clean technical spec tables.
 * ⚡ **Built-In TTL Caching:** Integrated `cachetools` layer prevents redundant requests, lowers bandwidth usage, and stops IP bans.
 * 🔒 **RapidAPI Proxy Security:** Validates `X-RapidAPI-Proxy-Secret` headers to prevent unauthorized direct backend access.
@@ -71,27 +69,3 @@
   ],
   "product_url": "[https://www.amazon.com/dp/B005GQW0OW](https://www.amazon.com/dp/B005GQW0OW)"
 }
-
-
-
----
-
-## 👨‍💻 Developer Information
-
-- **Developer:** Hami_Super_user
-- **Role:** Security Researcher & Python Developer
-
----
-
-## 💖 Donate & Support
-
-Agar aapko ye project pasand aaya aur aap ise support karna chahte hain:
-
-- ☕ **Buy Me a Coffee:** [buymeacoffee.com/your_username](https://buymeacoffee.com/)
-- 🪙 **Crypto / Wallet:** `0x1234567890abcdef...`
-
----
-
-## ⚠️ Disclaimer
-
-This tool is created for educational and authorized security assessment purposes only. Unauthorized testing against target websites without prior consent is strictly prohibited
